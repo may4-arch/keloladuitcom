@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Notyf Styling Enhancements */
+.notyf__toast {
+    border-radius: 0.75rem !important;
+    font-size: 0.8125rem !important;
+    font-family: inherit !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
+}
+
+.notyf__message {
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+}
+
+.notyf__dismiss-btn {
+    opacity: 0.75 !important;
+    transition: opacity 0.15s ease !important;
+}
+
+.notyf__dismiss-btn:hover {
+    opacity: 1 !important;
+}
