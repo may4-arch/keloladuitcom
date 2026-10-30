@@ -27,6 +27,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the transactions created by this user.
+     */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(transactions::class, 'user_id');
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

@@ -47,10 +47,10 @@ const getUserInitials = (name) => {
         <!-- Desktop Sidebar -->
         <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:w-60 md:flex-col border-r border-slate-800 bg-slate-900">
             <!-- Brand -->
-            <div class="flex h-14 items-center px-5 border-b border-slate-800">
-                <Link :href="route('dashboard')" class="flex items-center gap-2.5">
-                    <ApplicationLogo class="h-6 w-6" />
-                    <span class="text-sm font-semibold text-white">
+            <div class="flex h-16 items-center px-5 border-b border-slate-800">
+                <Link :href="route('dashboard')" class="flex items-center gap-3">
+                    <ApplicationLogo class="h-8 w-8 shrink-0" />
+                    <span class="text-base font-bold tracking-tight text-white">
                         Kelola<span class="text-emerald-400">Duit</span>
                     </span>
                 </Link>
@@ -171,10 +171,12 @@ const getUserInitials = (name) => {
         </aside>
 
         <!-- Mobile Header -->
-        <div class="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-slate-800 bg-slate-900 px-4 md:hidden">
-            <Link :href="route('dashboard')" class="flex items-center gap-2">
-                <ApplicationLogo class="h-6 w-6" />
-                <span class="text-sm font-semibold text-white">KelolaDuit</span>
+        <div class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-800 bg-slate-900 px-4 md:hidden">
+            <Link :href="route('dashboard')" class="flex items-center gap-2.5">
+                <ApplicationLogo class="h-8 w-8 shrink-0" />
+                <span class="text-base font-bold text-white">
+                    Kelola<span class="text-emerald-400">Duit</span>
+                </span>
             </Link>
 
             <button
@@ -202,9 +204,11 @@ const getUserInitials = (name) => {
         >
             <div>
                 <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <Link :href="route('dashboard')" class="flex items-center gap-2">
-                        <ApplicationLogo class="h-6 w-6" />
-                        <span class="text-sm font-semibold text-white">KelolaDuit</span>
+                    <Link :href="route('dashboard')" class="flex items-center gap-2.5">
+                        <ApplicationLogo class="h-8 w-8 shrink-0" />
+                        <span class="text-base font-bold text-white">
+                            Kelola<span class="text-emerald-400">Duit</span>
+                        </span>
                     </Link>
                     <button @click="showingMobileSidebar = false" class="text-slate-400 hover:text-white">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -298,8 +302,10 @@ const getUserInitials = (name) => {
 
         <!-- Main Content Area -->
         <div class="md:pl-60 flex flex-col flex-1">
-            <header v-if="$slots.header" class="border-b border-slate-800 px-6 py-4">
-                <slot name="header" />
+            <header v-if="$slots.header" class="flex h-16 items-center border-b border-slate-800 px-6">
+                <div class="w-full">
+                    <slot name="header" />
+                </div>
             </header>
 
             <main class="flex-1">
