@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\transactions;
+use App\Models\wallet;
 use App\Http\Requests\StoretransactionsRequest;
 use App\Http\Requests\UpdatetransactionsRequest;
 use Illuminate\Http\RedirectResponse;
@@ -86,6 +87,8 @@ class TransactionsController extends Controller
             }
         });
 
+        wallet::syncForUser($request->user()->id);
+
         return redirect()->route('transactions.index')
             ->with('status', 'Transaksi berhasil disimpan.');
     }
@@ -164,6 +167,8 @@ class TransactionsController extends Controller
             }
         });
 
+        wallet::syncForUser($request->user()->id);
+
         return redirect()->route('transactions.index')
             ->with('status', 'Transaksi berhasil diperbarui.');
     }
@@ -173,10 +178,13 @@ class TransactionsController extends Controller
      */
     public function destroy(Request $request, $id): RedirectResponse
     {
-        $transaction = transactions::where('user_id', $request->user()->id)
+        $userId = $request->user()->id;
+        $transaction = transactions::where('user_id', $userId)
             ->findOrFail($id);
 
         $transaction->delete();
+
+        wallet::syncForUser($userId);
 
         return redirect()->route('transactions.index')
             ->with('status', 'Transaksi berhasil dihapus.');

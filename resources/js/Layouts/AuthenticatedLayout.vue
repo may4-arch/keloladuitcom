@@ -47,8 +47,8 @@ const getUserInitials = (name) => {
         <!-- Desktop Sidebar -->
         <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:w-60 md:flex-col border-r border-slate-800 bg-slate-900">
             <!-- Brand -->
-            <div class="flex h-16 items-center px-5 border-b border-slate-800">
-                <Link :href="route('dashboard')" class="flex items-center gap-3">
+            <div class="flex h-16 shrink-0 items-center px-5 border-b border-slate-800">
+                <Link :href="route('wallets.index')" class="flex items-center gap-3">
                     <ApplicationLogo class="h-8 w-8 shrink-0" />
                     <span class="text-base font-bold tracking-tight text-white">
                         Kelola<span class="text-emerald-400">Duit</span>
@@ -58,20 +58,20 @@ const getUserInitials = (name) => {
 
             <!-- Navigation Links -->
             <div class="flex-1 overflow-y-auto p-4 space-y-2">
-                <!-- Dashboard -->
+                <!-- Wallet -->
                 <Link
-                    :href="route('dashboard')"
+                    :href="route('wallets.index')"
                     :class="[
-                        route().current('dashboard')
+                        route().current('wallets.index')
                             ? 'bg-slate-800 text-white font-medium'
                             : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50',
                         'flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs transition-colors'
                     ]"
                 >
                     <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
-                    <span>Dashboard</span>
+                    <span>Wallet</span>
                 </Link>
 
                 <!-- Category -->
@@ -104,22 +104,6 @@ const getUserInitials = (name) => {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
                     <span>Transaction</span>
-                </Link>
-
-                <!-- Wallet -->
-                <Link
-                    :href="route('wallets.index')"
-                    :class="[
-                        route().current('wallets.index')
-                            ? 'bg-slate-800 text-white font-medium'
-                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50',
-                        'flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs transition-colors'
-                    ]"
-                >
-                    <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                    <span>Wallet</span>
                 </Link>
 
                 <div class="my-2 border-t border-slate-800/80"></div>
@@ -172,7 +156,7 @@ const getUserInitials = (name) => {
 
         <!-- Mobile Header -->
         <div class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-800 bg-slate-900 px-4 md:hidden">
-            <Link :href="route('dashboard')" class="flex items-center gap-2.5">
+            <Link :href="route('wallets.index')" class="flex items-center gap-2.5">
                 <ApplicationLogo class="h-8 w-8 shrink-0" />
                 <span class="text-base font-bold text-white">
                     Kelola<span class="text-emerald-400">Duit</span>
@@ -204,7 +188,7 @@ const getUserInitials = (name) => {
         >
             <div>
                 <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <Link :href="route('dashboard')" class="flex items-center gap-2.5">
+                    <Link :href="route('wallets.index')" class="flex items-center gap-2.5">
                         <ApplicationLogo class="h-8 w-8 shrink-0" />
                         <span class="text-base font-bold text-white">
                             Kelola<span class="text-emerald-400">Duit</span>
@@ -219,15 +203,15 @@ const getUserInitials = (name) => {
 
                 <div class="mt-4 space-y-2">
                     <Link
-                        :href="route('dashboard')"
+                        :href="route('wallets.index')"
                         @click="showingMobileSidebar = false"
-                        :class="route().current('dashboard') ? 'bg-slate-800 text-white font-medium' : 'text-slate-400 hover:text-white'"
+                        :class="route().current('wallets.index') ? 'bg-slate-800 text-white font-medium' : 'text-slate-400 hover:text-white'"
                         class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs transition-colors"
                     >
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
-                        Dashboard
+                        Wallet
                     </Link>
 
                     <Link
@@ -252,18 +236,6 @@ const getUserInitials = (name) => {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                         </svg>
                         Transaction
-                    </Link>
-
-                    <Link
-                        :href="route('wallets.index')"
-                        @click="showingMobileSidebar = false"
-                        :class="route().current('wallets.index') ? 'bg-slate-800 text-white font-medium' : 'text-slate-400 hover:text-white'"
-                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs transition-colors"
-                    >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                        Wallet
                     </Link>
 
                     <div class="my-2 border-t border-slate-800/80"></div>
@@ -301,8 +273,8 @@ const getUserInitials = (name) => {
         </div>
 
         <!-- Main Content Area -->
-        <div class="md:pl-60 flex flex-col flex-1">
-            <header v-if="$slots.header" class="flex h-16 items-center border-b border-slate-800 px-6">
+        <div class="md:pl-60 flex flex-col min-h-screen">
+            <header v-if="$slots.header" class="flex h-16 shrink-0 items-center border-b border-slate-800 px-6">
                 <div class="w-full">
                     <slot name="header" />
                 </div>

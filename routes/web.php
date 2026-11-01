@@ -8,11 +8,14 @@ use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', [AuthenticatedSessionController::class, 'create'])
-    ->middleware('guest');
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect()->route('wallets.index')
+        : redirect()->route('login');
+});
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    return redirect()->route('wallets.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
