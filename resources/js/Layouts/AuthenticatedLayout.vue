@@ -106,6 +106,23 @@ const getUserInitials = (name) => {
                     <span>Transaction</span>
                 </Link>
 
+                <!-- Budget -->
+                <Link
+                    :href="route('budgets.index')"
+                    :class="[
+                        route().current('budgets.*')
+                            ? 'bg-slate-800 text-white font-medium'
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50',
+                        'flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs transition-colors'
+                    ]"
+                >
+                    <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                    </svg>
+                    <span>Budget</span>
+                </Link>
+
                 <div class="my-2 border-t border-slate-800/80"></div>
 
                 <!-- Profile -->
@@ -236,6 +253,19 @@ const getUserInitials = (name) => {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                         </svg>
                         Transaction
+                    </Link>
+
+                    <Link
+                        :href="route('budgets.index')"
+                        @click="showingMobileSidebar = false"
+                        :class="route().current('budgets.*') ? 'bg-slate-800 text-white font-medium' : 'text-slate-400 hover:text-white'"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs transition-colors"
+                    >
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                        </svg>
+                        Budget
                     </Link>
 
                     <div class="my-2 border-t border-slate-800/80"></div>
