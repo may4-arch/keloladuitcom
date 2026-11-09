@@ -1,6 +1,7 @@
 <script setup>
 import { reactive } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import DateRangePicker from '@/Components/DateRangePicker.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -85,18 +86,27 @@ const getDisplayDate = (item) => {
 };
 
 // Filter actions
-const applyFilter = () => {
+const applyFilter = (range) => {
+    const s = range?.startDate !== undefined ? range.startDate : filterForm.start_date;
+    const e = range?.endDate !== undefined ? range.endDate : filterForm.end_date;
+
     router.get(
         route('wallets.index'),
         {
-            start_date: filterForm.start_date || undefined,
-            end_date: filterForm.end_date || undefined,
+            start_date: s || undefined,
+            end_date: e || undefined,
         },
         {
             preserveState: true,
             preserveScroll: true,
         }
     );
+};
+
+const onRangeChange = (range) => {
+    filterForm.start_date = range.startDate;
+    filterForm.end_date = range.endDate;
+    applyFilter(range);
 };
 
 const resetFilter = () => {
@@ -143,7 +153,7 @@ const setPreset = (preset) => {
             </div>
         </template>
 
-        <div class="p-6 space-y-6">
+        <div class="p-6 pb-52 space-y-8">
             <!-- Digital Wallet Card & Quick Stats -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Main Wallet Digital Card -->
@@ -259,7 +269,7 @@ const setPreset = (preset) => {
             </div>
 
             <!-- Report Section: Category Budget -->
-            <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden shadow-sm">
+            <div class="rounded-xl border border-slate-800 bg-slate-900 shadow-sm relative">
                 <!-- Report Header & Date Filters -->
                 <div class="p-5 border-b border-slate-800 space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -301,51 +311,30 @@ const setPreset = (preset) => {
                         </div>
                     </div>
 
-                    <!-- Date Filter Inputs Form -->
-                    <form @submit.prevent="applyFilter" class="pt-2 flex flex-wrap items-center gap-3">
+                    <!-- Date Filter Bar with Custom Vanilla JS Date Range Picker -->
+                    <div class="pt-2 flex flex-wrap items-center gap-3">
                         <div class="flex items-center gap-2">
-                            <label class="text-xs text-slate-400">Dari:</label>
-                            <input
-                                type="date"
-                                v-model="filterForm.start_date"
-                                class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            <span class="text-xs text-slate-400 font-medium">Rentang Tanggal:</span>
+                            <DateRangePicker
+                                v-model:startDate="filterForm.start_date"
+                                v-model:endDate="filterForm.end_date"
+                                @change="onRangeChange"
                             />
                         </div>
 
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs text-slate-400">Sampai:</label>
-                            <input
-                                type="date"
-                                v-model="filterForm.end_date"
-                                class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                            />
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <button
-                                type="submit"
-                                class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 transition-colors shadow-sm"
-                            >
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                                </svg>
-                                <span>Filter Tanggal</span>
-                            </button>
-
-                            <button
-                                v-if="filterForm.start_date || filterForm.end_date"
-                                type="button"
-                                @click="resetFilter"
-                                class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
-                            >
-                                Reset
-                            </button>
-                        </div>
-                    </form>
+                        <button
+                            v-if="filterForm.start_date || filterForm.end_date"
+                            type="button"
+                            @click="resetFilter"
+                            class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+                        >
+                            Reset
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Report Table -->
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto rounded-b-xl">
                     <table class="w-full text-left text-xs">
                         <thead class="border-b border-slate-800 bg-slate-950/60 text-slate-400 uppercase text-[11px] font-semibold tracking-wider">
                             <tr>
@@ -446,6 +435,9 @@ const setPreset = (preset) => {
                     </table>
                 </div>
             </div>
+
+            <!-- Extra bottom spacer for smooth calendar popover reachability -->
+            <div class="h-28"></div>
         </div>
     </AuthenticatedLayout>
 </template>

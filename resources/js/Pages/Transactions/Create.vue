@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import SingleDatePicker from '@/Components/SingleDatePicker.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -124,13 +125,11 @@ const submit = () => {
                             <label for="date" class="mb-1 block text-xs font-medium text-slate-300">
                                 Tanggal
                             </label>
-                            <input
+                            <SingleDatePicker
                                 id="date"
-                                type="date"
                                 v-model="form.date"
                                 required
-                                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                :class="{ 'border-rose-500': form.errors.date }"
+                                :error="form.errors.date"
                             />
                             <p v-if="form.errors.date" class="mt-1 text-xs text-rose-400">
                                 {{ form.errors.date }}
