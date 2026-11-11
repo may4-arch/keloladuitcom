@@ -65,10 +65,15 @@ class TransactionsController extends Controller
                 }
             }
 
+            $type = $validated['type'] ?? 'normal';
+            $todate = ($type === 'normal') ? null : ($validated['todate'] ?? null);
+
             $transaction = transactions::create([
                 'user_id' => $request->user()->id,
                 'category_id' => $validated['category_id'],
+                'type' => $type,
                 'date' => $validated['date'],
+                'todate' => $todate,
                 'notes' => $validated['notes'] ?? null,
                 'total' => $total,
             ]);
@@ -143,9 +148,14 @@ class TransactionsController extends Controller
                 }
             }
 
+            $type = $validated['type'] ?? 'normal';
+            $todate = ($type === 'normal') ? null : ($validated['todate'] ?? null);
+
             $transaction->update([
                 'category_id' => $validated['category_id'],
+                'type' => $type,
                 'date' => $validated['date'],
+                'todate' => $todate,
                 'notes' => $validated['notes'] ?? null,
                 'total' => $total,
             ]);

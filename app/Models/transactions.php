@@ -14,8 +14,10 @@ class transactions extends Model
     protected $fillable = [ 
         'user_id',
         'category_id',
+        'type',
         'total',
         'date',
+        'todate',
         'notes',
     ];
  
@@ -23,6 +25,7 @@ class transactions extends Model
     protected $casts = [
         'total' => 'decimal:2',
         'date' => 'datetime',
+        'todate' => 'date',
     ];
  
     public function user(): BelongsTo

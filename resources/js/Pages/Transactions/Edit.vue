@@ -1,7 +1,8 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SingleDatePicker from '@/Components/SingleDatePicker.vue';
+import DateRangePicker from '@/Components/DateRangePicker.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -20,6 +21,10 @@ const initialDate = props.transaction.date
     ? new Date(props.transaction.date).toISOString().split('T')[0]
     : new Date().toISOString().split('T')[0];
 
+const initialToDate = props.transaction.todate
+    ? new Date(props.transaction.todate).toISOString().split('T')[0]
+    : null;
+
 // Prepare details
 const initialDetails = (props.transaction.details && props.transaction.details.length > 0)
     ? props.transaction.details.map((d) => ({
@@ -31,10 +36,41 @@ const initialDetails = (props.transaction.details && props.transaction.details.l
 
 const form = useForm({
     category_id: props.transaction.category_id,
+    type: props.transaction.type || 'normal',
     date: initialDate,
+    todate: initialToDate,
     notes: props.transaction.notes || '',
     details: initialDetails,
 });
+
+// Filter categories based on transaction type:
+// - normal: all categories
+// - hutang: only expense categories (type === 2)
+// - piutang: only income categories (type === 1)
+const filteredCategories = computed(() => {
+    if (form.type === 'hutang') {
+        return props.categories.filter((cat) => cat.type === 2);
+    }
+    if (form.type === 'piutang') {
+        return props.categories.filter((cat) => cat.type === 1);
+    }
+    return props.categories;
+});
+
+// Watch type change: reset todate if normal & ensure selected category matches allowed type
+watch(
+    () => form.type,
+    (newType) => {
+        if (newType === 'normal') {
+            form.todate = null;
+        }
+
+        const valid = filteredCategories.value.some((c) => c.category_id === form.category_id);
+        if (!valid) {
+            form.category_id = filteredCategories.value.length > 0 ? filteredCategories.value[0].category_id : '';
+        }
+    }
+);
 
 // Add item row
 const addItem = () => {
@@ -105,7 +141,7 @@ const submit = () => {
             <div class="mx-auto max-w-2xl rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-sm">
                 <form @submit.prevent="submit" class="space-y-5">
                     <!-- Section 1: Header Transaksi -->
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <!-- Kategori -->
                         <div>
                             <label for="category_id" class="mb-1 block text-xs font-medium text-slate-300">
@@ -120,7 +156,7 @@ const submit = () => {
                             >
                                 <option value="" disabled>Pilih Kategori</option>
                                 <option
-                                    v-for="cat in categories"
+                                    v-for="cat in filteredCategories"
                                     :key="cat.category_id"
                                     :value="cat.category_id"
                                 >
@@ -132,19 +168,62 @@ const submit = () => {
                             </p>
                         </div>
 
-                        <!-- Tanggal -->
+                        <!-- Tipe Transaksi -->
                         <div>
-                            <label for="date" class="mb-1 block text-xs font-medium text-slate-300">
+                            <label for="type" class="mb-1 block text-xs font-medium text-slate-300">
+                                Tipe Transaksi
+                            </label>
+                            <select
+                                id="type"
+                                v-model="form.type"
+                                required
+                                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                :class="{ 'border-rose-500': form.errors.type }"
+                            >
+                                <option value="normal">Normal</option>
+                                <option value="hutang">Hutang</option>
+                                <option value="piutang">Piutang</option>
+                            </select>
+                            <p v-if="form.errors.type" class="mt-1 text-xs text-rose-400">
+                                {{ form.errors.type }}
+                            </p>
+                        </div>
+
+                        <!-- Tanggal / Rentang Tanggal -->
+                        <div>
+                            <label
+                                :for="form.type === 'normal' ? 'date' : 'date-range'"
+                                class="mb-1 block text-xs font-medium text-slate-300"
+                            >
                                 Tanggal
                             </label>
+
+                            <!-- Single Date Picker for Normal -->
                             <SingleDatePicker
+                                v-if="form.type === 'normal'"
                                 id="date"
                                 v-model="form.date"
                                 required
                                 :error="form.errors.date"
                             />
+
+                            <!-- Date Range Picker for Hutang & Piutang -->
+                            <DateRangePicker
+                                v-else
+                                id="date-range"
+                                v-model:startDate="form.date"
+                                v-model:endDate="form.todate"
+                                align="right"
+                                input-class="w-full px-3 py-2 text-sm"
+                                placeholder="Pilih tanggal mulai & jatuh tempo..."
+                                :error="form.errors.date || form.errors.todate"
+                            />
+
                             <p v-if="form.errors.date" class="mt-1 text-xs text-rose-400">
                                 {{ form.errors.date }}
+                            </p>
+                            <p v-if="form.errors.todate && form.type !== 'normal'" class="mt-1 text-xs text-rose-400">
+                                {{ form.errors.todate }}
                             </p>
                         </div>
                     </div>

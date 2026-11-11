@@ -14,6 +14,18 @@ const props = defineProps({
         type: String,
         default: 'Pilih rentang tanggal...',
     },
+    error: {
+        type: String,
+        default: '',
+    },
+    align: {
+        type: String,
+        default: 'left',
+    },
+    inputClass: {
+        type: String,
+        default: '',
+    },
 });
 
 const emit = defineEmits(['update:startDate', 'update:endDate', 'change']);
@@ -281,9 +293,12 @@ onUnmounted(() => {
         <button
             type="button"
             @click="isOpen = !isOpen"
-            class="flex items-center justify-between rounded-lg border bg-slate-950 px-3 py-1.5 text-xs text-left transition-colors focus:outline-none focus:ring-1 focus:ring-emerald-500 min-w-[220px]"
+            class="flex items-center justify-between rounded-lg border bg-slate-950 text-left transition-colors focus:outline-none focus:ring-1 focus:ring-emerald-500"
             :class="[
-                isOpen
+                inputClass ? inputClass : 'px-3 py-1.5 text-xs min-w-[220px]',
+                error
+                    ? 'border-rose-500 text-rose-300'
+                    : isOpen
                     ? 'border-emerald-500 ring-1 ring-emerald-500'
                     : 'border-slate-700 hover:border-slate-600 text-slate-100',
             ]"
@@ -327,7 +342,8 @@ onUnmounted(() => {
         <!-- Dual Month Date Range Popover -->
         <div
             v-if="isOpen"
-            class="absolute left-0 z-50 mt-1.5 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 select-none max-w-[95vw] sm:max-w-none"
+            class="absolute z-50 mt-1.5 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 select-none max-w-[95vw] sm:max-w-none"
+            :class="[align === 'right' ? 'right-0' : 'left-0']"
         >
             <!-- Preset Quick Buttons -->
             <div class="flex items-center gap-1.5 pb-4 mb-3 border-b border-slate-800/80 overflow-x-auto text-xs">

@@ -198,7 +198,7 @@ const setPreset = (preset) => {
 
                             <!-- Money Before (Saldo Sebelumnya) -->
                             <div class="mt-3 inline-flex items-center gap-2 rounded-lg bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 text-xs">
-                                <span class="text-slate-400 font-medium">Money Before (Saldo Sebelumnya):</span>
+                                <span class="text-slate-400 font-medium">Saldo Sebelumnya:</span>
                                 <span class="font-mono font-semibold text-amber-300">
                                     {{ formatRupiah(moneyBefore) }}
                                 </span>

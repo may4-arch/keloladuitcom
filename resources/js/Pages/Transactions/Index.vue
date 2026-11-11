@@ -31,6 +31,23 @@ const formatRupiah = (val) => {
     }).format(val || 0);
 };
 
+// Type Badge helpers
+const getTypeBadgeClass = (type) => {
+    if (type === 'hutang') {
+        return 'bg-amber-950/60 text-amber-400 border-amber-800/60';
+    }
+    if (type === 'piutang') {
+        return 'bg-sky-950/60 text-sky-400 border-sky-800/60';
+    }
+    return 'bg-slate-800 text-slate-300 border-slate-700/60';
+};
+
+const getTypeLabel = (type) => {
+    if (type === 'hutang') return 'Hutang';
+    if (type === 'piutang') return 'Piutang';
+    return 'Normal';
+};
+
 // Search & Debounce state
 const searchQuery = ref('');
 const debouncedSearch = ref('');
@@ -55,7 +72,7 @@ const clearSearch = () => {
     isSearching.value = false;
 };
 
-// Filtered Transactions by Category name or Notes
+// Filtered Transactions by Category name, Notes, or Type
 const filteredTransactions = computed(() => {
     const q = debouncedSearch.value.trim().toLowerCase();
     if (!q) return props.transactions;
@@ -63,7 +80,8 @@ const filteredTransactions = computed(() => {
     return props.transactions.filter((trx) => {
         const catName = trx.category?.name ? String(trx.category.name).toLowerCase() : '';
         const notes = trx.notes ? String(trx.notes).toLowerCase() : '';
-        return catName.includes(q) || notes.includes(q);
+        const type = trx.type ? String(trx.type).toLowerCase() : 'normal';
+        return catName.includes(q) || notes.includes(q) || type.includes(q);
     });
 });
 
@@ -311,6 +329,7 @@ const closeDetailModal = () => {
                         <thead class="border-b border-slate-800 bg-slate-950/60 text-slate-400 uppercase text-[11px] font-semibold tracking-wider">
                             <tr>
                                 <th class="px-5 py-3">Kategori</th>
+                                <th class="px-5 py-3">Tipe</th>
                                 <th class="px-5 py-3">Tanggal</th>
                                 <th class="px-5 py-3">Total</th>
                                 <th class="px-5 py-3">Catatan</th>
@@ -355,13 +374,26 @@ const closeDetailModal = () => {
                                     </div>
                                 </td>
 
+                                <!-- Tipe -->
+                                <td class="px-5 py-3.5 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border"
+                                        :class="getTypeBadgeClass(trx.type)"
+                                    >
+                                        {{ getTypeLabel(trx.type) }}
+                                    </span>
+                                </td>
+
                                 <!-- Date -->
                                 <td class="px-5 py-3.5 text-slate-300 whitespace-nowrap">
                                     <div class="flex items-center gap-1.5">
-                                        <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg class="h-3.5 w-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        <span>{{ formatDate(trx.date) }}</span>
+                                        <span v-if="trx.todate">
+                                            {{ formatDate(trx.date) }} <span class="text-slate-500">&rarr;</span> {{ formatDate(trx.todate) }}
+                                        </span>
+                                        <span v-else>{{ formatDate(trx.date) }}</span>
                                     </div>
                                 </td>
 
@@ -504,9 +536,15 @@ const closeDetailModal = () => {
                 </div>
 
                 <div class="mt-4 space-y-3">
-                    <div class="flex items-center justify-between text-xs text-slate-400">
-                        <span>Kategori: <strong class="text-slate-200">{{ selectedTransaction?.category?.name || '-' }}</strong></span>
-                        <span>Tanggal: <strong class="text-slate-200">{{ formatDate(selectedTransaction?.date) }}</strong></span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-slate-400">
+                        <div>Kategori: <strong class="text-slate-200 block">{{ selectedTransaction?.category?.name || '-' }}</strong></div>
+                        <div>Tipe: <strong class="text-slate-200 block">{{ getTypeLabel(selectedTransaction?.type) }}</strong></div>
+                        <div>
+                            Tanggal:
+                            <strong class="text-slate-200 block">
+                                {{ selectedTransaction?.todate ? `${formatDate(selectedTransaction?.date)} s/d ${formatDate(selectedTransaction?.todate)}` : formatDate(selectedTransaction?.date) }}
+                            </strong>
+                        </div>
                     </div>
 
                     <p v-if="selectedTransaction?.notes" class="text-xs text-slate-400">
