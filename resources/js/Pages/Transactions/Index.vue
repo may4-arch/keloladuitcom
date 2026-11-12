@@ -1,11 +1,17 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import SearchableCategorySelect from '@/Components/SearchableCategorySelect.vue';
+import DateRangePicker from '@/Components/DateRangePicker.vue';
 import Modal from '@/Components/Modal.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     transactions: {
+        type: Array,
+        default: () => [],
+    },
+    categories: {
         type: Array,
         default: () => [],
     },
@@ -48,6 +54,26 @@ const getTypeLabel = (type) => {
     return 'Normal';
 };
 
+// Categories List for Searchable dropdown (with fallback)
+const categoryList = computed(() => {
+    if (props.categories && props.categories.length > 0) {
+        return props.categories;
+    }
+    const map = new Map();
+    props.transactions.forEach((t) => {
+        if (t.category) {
+            map.set(t.category.category_id, t.category);
+        }
+    });
+    return Array.from(map.values());
+});
+
+// Filter states
+const selectedCategoryId = ref(null);
+const selectedType = ref('');
+const filterStartDate = ref('');
+const filterEndDate = ref('');
+
 // Search & Debounce state
 const searchQuery = ref('');
 const debouncedSearch = ref('');
@@ -72,16 +98,82 @@ const clearSearch = () => {
     isSearching.value = false;
 };
 
-// Filtered Transactions by Category name, Notes, or Type
-const filteredTransactions = computed(() => {
-    const q = debouncedSearch.value.trim().toLowerCase();
-    if (!q) return props.transactions;
+// Check if any filter is currently applied
+const hasActiveFilters = computed(() => {
+    return (
+        Boolean(debouncedSearch.value) ||
+        Boolean(selectedCategoryId.value) ||
+        Boolean(selectedType.value) ||
+        Boolean(filterStartDate.value) ||
+        Boolean(filterEndDate.value)
+    );
+});
 
+// Reset all filters
+const resetAllFilters = () => {
+    clearSearch();
+    selectedCategoryId.value = null;
+    selectedType.value = '';
+    filterStartDate.value = '';
+    filterEndDate.value = '';
+    currentPage.value = 1;
+};
+
+// Reset page when any filter changes
+watch([selectedCategoryId, selectedType, filterStartDate, filterEndDate], () => {
+    currentPage.value = 1;
+});
+
+// Selected Category Model for display tag
+const selectedCategoryObj = computed(() => {
+    if (!selectedCategoryId.value) return null;
+    return categoryList.value.find(
+        (c) => String(c.category_id) === String(selectedCategoryId.value)
+    );
+});
+
+// Filtered Transactions combining Category, Type, DateRange, and Search
+const filteredTransactions = computed(() => {
     return props.transactions.filter((trx) => {
-        const catName = trx.category?.name ? String(trx.category.name).toLowerCase() : '';
-        const notes = trx.notes ? String(trx.notes).toLowerCase() : '';
-        const type = trx.type ? String(trx.type).toLowerCase() : 'normal';
-        return catName.includes(q) || notes.includes(q) || type.includes(q);
+        // 1. Kategori Filter (DropdownSearch)
+        if (selectedCategoryId.value) {
+            const catId = trx.category_id || trx.category?.category_id;
+            if (String(catId) !== String(selectedCategoryId.value)) {
+                return false;
+            }
+        }
+
+        // 2. Tipe Filter (Dropdown: normal / hutang / piutang)
+        if (selectedType.value) {
+            const trxType = trx.type || 'normal';
+            if (trxType !== selectedType.value) {
+                return false;
+            }
+        }
+
+        // 3. Tanggal Filter (DateRange)
+        if (filterStartDate.value || filterEndDate.value) {
+            const trxDateStr = trx.date ? String(trx.date).split('T')[0] : '';
+            if (filterStartDate.value && trxDateStr < filterStartDate.value) {
+                return false;
+            }
+            if (filterEndDate.value && trxDateStr > filterEndDate.value) {
+                return false;
+            }
+        }
+
+        // 4. Keyword Debounced Search (Category Name, Notes, Type)
+        if (debouncedSearch.value.trim()) {
+            const q = debouncedSearch.value.trim().toLowerCase();
+            const catName = trx.category?.name ? String(trx.category.name).toLowerCase() : '';
+            const notes = trx.notes ? String(trx.notes).toLowerCase() : '';
+            const type = trx.type ? String(trx.type).toLowerCase() : 'normal';
+            if (!catName.includes(q) && !notes.includes(q) && !type.includes(q)) {
+                return false;
+            }
+        }
+
+        return true;
     });
 });
 
@@ -223,66 +315,183 @@ const closeDetailModal = () => {
         </template>
 
         <div class="p-4 sm:p-6 space-y-4">
-            <!-- Toolbar: Search & Per Page Selector -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <!-- Debounced Search Input -->
-                <div class="relative w-full sm:w-80">
-                    <svg
-                        class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                        type="text"
-                        v-model="searchQuery"
-                        placeholder="Cari kategori atau catatan..."
-                        class="w-full rounded-lg border border-slate-800 bg-slate-900 pl-9 pr-8 py-2 text-xs text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
-                    />
+            <!-- Filter Section Card -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900 p-4 space-y-3.5 shadow-sm">
+                <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        <span class="text-xs font-semibold text-slate-200 uppercase tracking-wider">
+                            Filter Transaksi
+                        </span>
+                    </div>
 
-                    <!-- Clear / Typing Indicator -->
+                    <!-- Reset Filter Button -->
                     <button
-                        v-if="searchQuery"
+                        v-if="hasActiveFilters"
                         type="button"
-                        @click="clearSearch"
-                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-                        title="Hapus pencarian"
+                        @click="resetAllFilters"
+                        class="inline-flex items-center gap-1 text-xs text-rose-400 hover:text-rose-300 font-medium transition-colors"
+                        title="Reset seluruh filter pencarian"
                     >
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
+                        <span>Reset Filter</span>
                     </button>
-                    <span
-                        v-else-if="isSearching"
-                        class="absolute right-2.5 top-1/2 -translate-y-1/2 flex h-2 w-2 relative"
-                    >
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
                 </div>
 
-                <!-- Per Page Selector -->
-                <div class="flex items-center justify-between sm:justify-end gap-3 text-xs text-slate-400">
-                    <div class="flex items-center gap-2">
-                        <span class="text-slate-400 whitespace-nowrap">Tampilkan:</span>
+                <!-- Filters Grid: Kategori (DropdownSearch), Tipe (Dropdown), Tanggal (DateRange), Keyword -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <!-- 1. Kategori (DropdownSearch) -->
+                    <div>
+                        <label class="mb-1 block text-[11px] font-medium text-slate-400">
+                            Kategori
+                        </label>
+                        <SearchableCategorySelect
+                            v-model="selectedCategoryId"
+                            :categories="categoryList"
+                            placeholder="Semua Kategori"
+                            input-class="w-full px-3 py-2 text-xs"
+                        />
+                    </div>
+
+                    <!-- 2. Tipe Transaksi (Dropdown) -->
+                    <div>
+                        <label for="filter-type" class="mb-1 block text-[11px] font-medium text-slate-400">
+                            Tipe Transaksi
+                        </label>
+                        <select
+                            id="filter-type"
+                            v-model="selectedType"
+                            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors cursor-pointer"
+                        >
+                            <option value="">Semua Tipe</option>
+                            <option value="normal">Normal</option>
+                            <option value="hutang">Hutang</option>
+                            <option value="piutang">Piutang</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. Tanggal (DateRange) -->
+                    <div>
+                        <label class="mb-1 block text-[11px] font-medium text-slate-400">
+                            Rentang Tanggal
+                        </label>
+                        <DateRangePicker
+                            v-model:startDate="filterStartDate"
+                            v-model:endDate="filterEndDate"
+                            placeholder="Pilih rentang tanggal..."
+                            input-class="w-full px-3 py-2 text-xs"
+                            align="left"
+                        />
+                    </div>
+
+                    <!-- 4. Debounced Search (Keyword / Catatan) -->
+                    <div>
+                        <label class="mb-1 block text-[11px] font-medium text-slate-400">
+                            Pencarian Kata Kunci
+                        </label>
+                        <div class="relative w-full">
+                            <svg
+                                class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input
+                                type="text"
+                                v-model="searchQuery"
+                                placeholder="Cari catatan / kategori..."
+                                class="w-full rounded-lg border border-slate-700 bg-slate-950 pl-8 pr-8 py-2 text-xs text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                            />
+                            <button
+                                v-if="searchQuery"
+                                type="button"
+                                @click="clearSearch"
+                                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                                title="Hapus pencarian"
+                            >
+                                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                            <span
+                                v-else-if="isSearching"
+                                class="absolute right-2.5 top-1/2 -translate-y-1/2 flex h-2 w-2 relative"
+                            >
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-bar: Active Filter Badges & Per-page Selector -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t border-slate-800/60 text-xs">
+                    <!-- Active Tags -->
+                    <div class="flex items-center flex-wrap gap-1.5 text-[11px] text-slate-400">
+                        <span v-if="hasActiveFilters" class="text-slate-300 font-medium mr-1">Filter Aktif:</span>
+
+                        <span
+                            v-if="selectedCategoryObj"
+                            class="inline-flex items-center gap-1 rounded-md bg-slate-800/90 px-2 py-0.5 text-slate-200 border border-slate-700"
+                        >
+                            <span>Kategori: <strong>{{ selectedCategoryObj.name }}</strong></span>
+                            <button type="button" @click="selectedCategoryId = null" class="text-slate-400 hover:text-rose-400 ml-0.5 font-bold">&times;</button>
+                        </span>
+
+                        <span
+                            v-if="selectedType"
+                            class="inline-flex items-center gap-1 rounded-md bg-slate-800/90 px-2 py-0.5 text-slate-200 border border-slate-700 capitalize"
+                        >
+                            <span>Tipe: <strong>{{ getTypeLabel(selectedType) }}</strong></span>
+                            <button type="button" @click="selectedType = ''" class="text-slate-400 hover:text-rose-400 ml-0.5 font-bold">&times;</button>
+                        </span>
+
+                        <span
+                            v-if="filterStartDate || filterEndDate"
+                            class="inline-flex items-center gap-1 rounded-md bg-slate-800/90 px-2 py-0.5 text-slate-200 border border-slate-700"
+                        >
+                            <span>Tanggal: <strong>{{ formatDate(filterStartDate) }} &rarr; {{ formatDate(filterEndDate) }}</strong></span>
+                            <button type="button" @click="filterStartDate = ''; filterEndDate = ''" class="text-slate-400 hover:text-rose-400 ml-0.5 font-bold">&times;</button>
+                        </span>
+
+                        <span
+                            v-if="debouncedSearch"
+                            class="inline-flex items-center gap-1 rounded-md bg-slate-800/90 px-2 py-0.5 text-slate-200 border border-slate-700"
+                        >
+                            <span>Kata Kunci: <strong>"{{ debouncedSearch }}"</strong></span>
+                            <button type="button" @click="clearSearch" class="text-slate-400 hover:text-rose-400 ml-0.5 font-bold">&times;</button>
+                        </span>
+
+                        <span v-if="!hasActiveFilters" class="text-slate-500">
+                            Menampilkan semua data tanpa filter khusus.
+                        </span>
+                    </div>
+
+                    <!-- Per Page Selector -->
+                    <div class="flex items-center gap-2 text-slate-400 self-end sm:self-auto shrink-0">
+                        <span class="whitespace-nowrap">Tampilkan:</span>
                         <select
                             v-model.number="perPage"
-                            class="rounded-lg border border-slate-800 bg-slate-900 py-1.5 pl-3 pr-8 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors cursor-pointer"
+                            class="rounded-lg border border-slate-700 bg-slate-950 py-1 pl-2.5 pr-7 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors cursor-pointer"
                         >
                             <option v-for="opt in perPageOptions" :key="opt" :value="opt">
                                 {{ opt }}
                             </option>
                         </select>
-                        <span class="text-slate-400">data / hal</span>
+                        <span>data / hal</span>
                     </div>
                 </div>
             </div>
 
             <!-- Transactions Table Card -->
             <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden shadow-sm">
-                <!-- If No Data at All -->
+                <!-- If No Data at All in DB -->
                 <div v-if="transactions.length === 0" class="p-12 text-center">
                     <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-slate-400 mb-3">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -303,7 +512,7 @@ const closeDetailModal = () => {
                     </div>
                 </div>
 
-                <!-- If Search Results Empty -->
+                <!-- If Search / Filter Results Empty -->
                 <div v-else-if="filteredTransactions.length === 0" class="p-12 text-center">
                     <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-slate-400 mb-3">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -312,14 +521,14 @@ const closeDetailModal = () => {
                     </div>
                     <p class="text-sm font-medium text-slate-300">Tidak ada transaksi ditemukan</p>
                     <p class="text-xs text-slate-500 mt-1">
-                        Tidak ada transaksi yang cocok dengan kata kunci "<span class="text-slate-300 font-medium">{{ debouncedSearch }}</span>".
+                        Tidak ada transaksi yang cocok dengan kriteria filter atau pencarian Anda.
                     </p>
                     <button
                         type="button"
-                        @click="clearSearch"
-                        class="mt-3 text-xs text-emerald-400 hover:text-emerald-300 underline font-medium"
+                        @click="resetAllFilters"
+                        class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-emerald-400 hover:text-white hover:bg-slate-700 transition-colors font-medium"
                     >
-                        Reset pencarian
+                        Reset Semua Filter
                     </button>
                 </div>
 
@@ -458,7 +667,7 @@ const closeDetailModal = () => {
                         dari
                         <span class="font-medium text-slate-200">{{ filteredTransactions.length }}</span>
                         transaksi
-                        <span v-if="debouncedSearch" class="text-slate-500">
+                        <span v-if="hasActiveFilters" class="text-slate-500">
                             (difilter dari {{ transactions.length }} total)
                         </span>
                     </div>

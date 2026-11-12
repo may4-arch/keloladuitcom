@@ -6,6 +6,7 @@ use App\Models\Budget;
 use App\Models\wallet;
 use App\Models\transactions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -95,12 +96,45 @@ class WalletController extends Controller
             ];
         }
 
+        // Category transactions breakdown for donut chart
+        $categoryTransactionsQuery = transactions::where('transactions.user_id', $userId)
+            ->join('categories', 'transactions.category_id', '=', 'categories.category_id')
+            ->select(
+                'categories.category_id',
+                'categories.name as category_name',
+                'categories.type as category_type',
+                DB::raw('SUM(transactions.total) as total_amount'),
+                DB::raw('COUNT(transactions.transaction_id) as transaction_count')
+            );
+
+        if (!empty($startDate)) {
+            $categoryTransactionsQuery->whereDate('transactions.date', '>=', $startDate);
+        }
+        if (!empty($endDate)) {
+            $categoryTransactionsQuery->whereDate('transactions.date', '<=', $endDate);
+        }
+
+        $categoryTransactions = $categoryTransactionsQuery
+            ->groupBy('categories.category_id', 'categories.name', 'categories.type')
+            ->orderByDesc('total_amount')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'category_id' => $item->category_id,
+                    'category_name' => $item->category_name,
+                    'category_type' => (int) $item->category_type, // 1 = income, 2 = expense
+                    'total_amount' => (float) $item->total_amount,
+                    'transaction_count' => (int) $item->transaction_count,
+                ];
+            });
+
         return Inertia::render('Wallet/Index', [
             'currentBalance' => $currentBalance,
             'moneyBefore' => $moneyBefore,
             'totalIncome' => $totalIncome,
             'totalExpense' => $totalExpense,
             'categoryBudgets' => $categoryBudgets,
+            'categoryTransactions' => $categoryTransactions,
             'filters' => [
                 'start_date' => $startDate ?? '',
                 'end_date' => $endDate ?? '',

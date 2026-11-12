@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue';
+import { reactive, ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DateRangePicker from '@/Components/DateRangePicker.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -22,6 +22,10 @@ const props = defineProps({
         default: 0,
     },
     categoryBudgets: {
+        type: Array,
+        default: () => [],
+    },
+    categoryTransactions: {
         type: Array,
         default: () => [],
     },
@@ -138,6 +142,70 @@ const setPreset = (preset) => {
     }
     applyFilter();
 };
+
+// Donut Chart logic for Category Transactions
+const chartType = ref(2); // 2 = Pengeluaran, 1 = Pemasukan
+const hoveredCategory = ref(null);
+
+const sliceColors = [
+    '#10b981', // emerald-500
+    '#06b6d4', // cyan-500
+    '#f59e0b', // amber-500
+    '#8b5cf6', // violet-500
+    '#ec4899', // pink-500
+    '#3b82f6', // blue-500
+    '#14b8a6', // teal-500
+    '#f97316', // orange-500
+    '#a855f7', // purple-500
+    '#6366f1', // indigo-500
+];
+
+const activeChartCategories = computed(() => {
+    return props.categoryTransactions.filter(
+        (c) => c.category_type === chartType.value && c.total_amount > 0
+    );
+});
+
+const activeChartTotal = computed(() => {
+    return activeChartCategories.value.reduce((sum, c) => sum + c.total_amount, 0);
+});
+
+const largestCategory = computed(() => {
+    if (activeChartCategories.value.length === 0) return null;
+    return activeChartCategories.value[0];
+});
+
+const smallestCategory = computed(() => {
+    if (activeChartCategories.value.length === 0) return null;
+    return activeChartCategories.value[activeChartCategories.value.length - 1];
+});
+
+const radius = 70;
+const circumference = 2 * Math.PI * radius; // ~439.82297
+
+const chartSlices = computed(() => {
+    const total = activeChartTotal.value;
+    if (total <= 0) return [];
+
+    let accumulatedOffset = 0;
+    return activeChartCategories.value.map((item, index) => {
+        const ratio = item.total_amount / total;
+        const arcLength = ratio * circumference;
+        const color = sliceColors[index % sliceColors.length];
+        const percentage = (ratio * 100).toFixed(1);
+
+        const slice = {
+            ...item,
+            color,
+            percentage,
+            dashArray: `${arcLength} ${circumference - arcLength}`,
+            dashOffset: -accumulatedOffset,
+        };
+
+        accumulatedOffset += arcLength;
+        return slice;
+    });
+});
 </script>
 
 <template>
@@ -280,9 +348,7 @@ const setPreset = (preset) => {
                                     {{ categoryBudgets.length }} Kategori
                                 </span>
                             </h2>
-                            <p class="text-xs text-slate-400 mt-0.5">
-                                Perbandingan antara batas maksimal budget dengan pengeluaran aktual transaksi per kategori.
-                            </p>
+                           
                         </div>
 
                         <!-- Date Preset Badges -->
@@ -433,6 +499,134 @@ const setPreset = (preset) => {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Donut Chart: Category Transactions Breakdown -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900 p-6 space-y-6 shadow-sm">
+                <!-- Section Header with Type Tabs -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800/80 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center justify-center h-6 w-6 rounded-lg bg-emerald-500/15 text-emerald-400">
+                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                                </svg>
+                            </span>
+                            <h2 class="text-sm font-semibold text-white">
+                                Grafik Transaksi Kategori (Donut Chart)
+                            </h2>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Visualisasi distribusi transaksi per kategori
+                        </p>
+                    </div>
+
+                    <!-- Type Switcher Tabs (Pengeluaran / Pemasukan) -->
+                    <div class="inline-flex rounded-lg border border-slate-800 bg-slate-950 p-1 self-start sm:self-auto text-xs">
+                        <button
+                            type="button"
+                            @click="chartType = 2"
+                            :class="chartType === 2 ? 'bg-slate-800 text-rose-400 font-semibold shadow-sm' : 'text-slate-400 hover:text-white'"
+                            class="rounded-md px-3 py-1.5 transition-colors"
+                        >
+                            Pengeluaran
+                        </button>
+                        <button
+                            type="button"
+                            @click="chartType = 1"
+                            :class="chartType === 1 ? 'bg-slate-800 text-emerald-400 font-semibold shadow-sm' : 'text-slate-400 hover:text-white'"
+                            class="rounded-md px-3 py-1.5 transition-colors"
+                        >
+                            Pemasukan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Empty State if no transactions in active tab -->
+                <div v-if="activeChartCategories.length === 0" class="py-12 text-center text-slate-400">
+                    <div class="mx-auto h-12 w-12 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-500 mb-3">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                        </svg>
+                    </div>
+                    <p class="text-sm font-medium text-slate-300">
+                        Tidak ada data transaksi {{ chartType === 2 ? 'pengeluaran' : 'pemasukan' }}
+                    </p>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Belum ada transaksi tercatat pada rentang tanggal yang dipilih.
+                    </p>
+                </div>
+
+                <!-- Donut Chart Only -->
+                <div v-else class="py-6 flex flex-col items-center justify-center">
+                    <div class="relative w-72 h-72 sm:w-80 sm:h-80 flex items-center justify-center">
+                        <svg class="w-full h-full drop-shadow-lg" viewBox="0 0 200 200">
+                            <!-- Background Track Circle -->
+                            <circle
+                                cx="100"
+                                cy="100"
+                                :r="radius"
+                                fill="transparent"
+                                stroke="#1e293b"
+                                stroke-width="24"
+                            />
+
+                            <!-- Segment Slices -->
+                            <circle
+                                v-for="slice in chartSlices"
+                                :key="slice.category_id"
+                                cx="100"
+                                cy="100"
+                                :r="radius"
+                                fill="transparent"
+                                :stroke="slice.color"
+                                :stroke-width="hoveredCategory?.category_id === slice.category_id ? 30 : 24"
+                                :stroke-dasharray="slice.dashArray"
+                                :stroke-dashoffset="slice.dashOffset"
+                                transform="rotate(-90 100 100)"
+                                class="cursor-pointer transition-all duration-300"
+                                :style="{
+                                    opacity: hoveredCategory && hoveredCategory.category_id !== slice.category_id ? 0.3 : 1,
+                                    filter: hoveredCategory?.category_id === slice.category_id ? `drop-shadow(0 0 10px ${slice.color})` : 'none'
+                                }"
+                                @mouseenter="hoveredCategory = slice"
+                                @mouseleave="hoveredCategory = null"
+                            />
+                        </svg>
+
+                        <!-- Center Readout -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 pointer-events-none select-none">
+                            <span
+                                v-if="hoveredCategory && hoveredCategory.category_id === largestCategory?.category_id"
+                                class="inline-block px-2.5 py-0.5 mb-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                            >
+                                Paling Besar
+                            </span>
+                            <span
+                                v-else-if="hoveredCategory && hoveredCategory.category_id === smallestCategory?.category_id && chartSlices.length > 1"
+                                class="inline-block px-2.5 py-0.5 mb-1 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30"
+                            >
+                                Paling Kecil
+                            </span>
+
+                            <span class="text-xs font-semibold text-slate-300 truncate max-w-[160px]">
+                                {{ hoveredCategory ? hoveredCategory.category_name : (chartType === 2 ? 'Total Pengeluaran' : 'Total Pemasukan') }}
+                            </span>
+                            <span class="text-base sm:text-lg font-bold text-white font-mono mt-0.5 truncate max-w-[170px]">
+                                {{ hoveredCategory ? formatRupiah(hoveredCategory.total_amount) : formatRupiah(activeChartTotal) }}
+                            </span>
+                            <span class="text-[11px] font-medium text-emerald-400 mt-0.5">
+                                {{ hoveredCategory ? `${hoveredCategory.percentage}% (${hoveredCategory.transaction_count} transaksi)` : `${chartSlices.length} Kategori` }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-500 mt-4 text-center">
+                        Arahkan kursor pada potongan grafik untuk melihat detail kategori
+                    </p>
                 </div>
             </div>
 

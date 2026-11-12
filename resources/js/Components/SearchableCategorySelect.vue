@@ -18,6 +18,10 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    inputClass: {
+        type: String,
+        default: '',
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -86,8 +90,9 @@ onUnmounted(() => {
         <button
             type="button"
             @click="toggleDropdown"
-            class="w-full flex items-center justify-between rounded-lg border bg-slate-950 px-3 py-2 text-sm text-left transition-colors focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            class="w-full flex items-center justify-between rounded-lg border bg-slate-950 text-left transition-colors focus:outline-none focus:ring-1 focus:ring-emerald-500"
             :class="[
+                inputClass ? inputClass : 'px-3 py-2 text-sm',
                 error
                     ? 'border-rose-500 text-rose-300'
                     : isOpen
@@ -166,6 +171,19 @@ onUnmounted(() => {
 
             <!-- Categories Options List -->
             <div class="max-h-56 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                <!-- Clear Option when filtered -->
+                <button
+                    v-if="modelValue"
+                    type="button"
+                    @click="clearSelection"
+                    class="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-left text-slate-400 hover:bg-slate-800 hover:text-white transition-colors border-b border-slate-800/80 mb-1"
+                >
+                    <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Semua Kategori (Hapus Filter)</span>
+                </button>
+
                 <button
                     v-for="category in filteredCategories"
                     :key="category.category_id"

@@ -157,6 +157,7 @@ const submit = () => {
                                 <option value="" disabled>Pilih Kategori</option>
                                 <option
                                     v-for="cat in filteredCategories"
+                                    
                                     :key="cat.category_id"
                                     :value="cat.category_id"
                                 >

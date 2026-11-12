@@ -26,8 +26,15 @@ class TransactionsController extends Controller
             ->orderBy('transaction_id', 'desc')
             ->get();
 
+        $categories = Category::where('user_id', $request->user()->id)
+            ->orderBy('type')
+            ->orderBy('priority')
+            ->orderBy('name')
+            ->get(['category_id', 'name', 'type']);
+
         return Inertia::render('Transactions/Index', [
             'transactions' => $transactions,
+            'categories' => $categories,
         ]);
     }
 
