@@ -26,6 +26,14 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    sameMonthOnly: {
+        type: Boolean,
+        default: false,
+    },
+    allowAll: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 const emit = defineEmits(['update:startDate', 'update:endDate', 'change']);
@@ -170,10 +178,24 @@ const buildMonthDays = (year, month) => {
 const leftMonthDays = computed(() => buildMonthDays(baseYear.value, baseMonth.value));
 const rightMonthDays = computed(() => buildMonthDays(rightMonthInfo.value.year, rightMonthInfo.value.month));
 
+const isDateDisabled = (dateStr) => {
+    if (!dateStr) return true;
+    if (props.sameMonthOnly && tempStart.value && !tempEnd.value) {
+        const allowedMonthPrefix = tempStart.value.slice(0, 7); // "YYYY-MM"
+        return !dateStr.startsWith(allowedMonthPrefix);
+    }
+    return false;
+};
+
 // Calculate active range (either confirmed range, or tempStart to hover preview)
 const activeRange = computed(() => {
     const s = tempStart.value;
-    const e = tempEnd.value || (tempStart.value && hoverDate.value && hoverDate.value > tempStart.value ? hoverDate.value : '');
+    const validHover =
+        tempStart.value &&
+        hoverDate.value &&
+        hoverDate.value > tempStart.value &&
+        !isDateDisabled(hoverDate.value);
+    const e = tempEnd.value || (validHover ? hoverDate.value : '');
 
     return {
         start: s,
@@ -196,7 +218,7 @@ const isDayBetween = (dateStr) => {
 
 // Date selection logic
 const handleDateClick = (dateStr) => {
-    if (!dateStr) return;
+    if (!dateStr || isDateDisabled(dateStr)) return;
 
     if (!tempStart.value || (tempStart.value && tempEnd.value)) {
         // First click: reset and pick start
@@ -218,10 +240,24 @@ const handleDateClick = (dateStr) => {
 };
 
 const handleDateHover = (dateStr) => {
-    if (tempStart.value && !tempEnd.value) {
+    if (tempStart.value && !tempEnd.value && !isDateDisabled(dateStr)) {
         hoverDate.value = dateStr;
     }
 };
+
+const resetTempSelection = () => {
+    tempStart.value = '';
+    tempEnd.value = '';
+    hoverDate.value = '';
+};
+
+watch(isOpen, (open) => {
+    if (open) {
+        tempStart.value = props.startDate || '';
+        tempEnd.value = props.endDate || '';
+        hoverDate.value = '';
+    }
+});
 
 // Presets
 const applyPreset = (preset) => {
@@ -317,7 +353,7 @@ onUnmounted(() => {
 
             <div class="flex items-center gap-1 shrink-0 text-slate-400 ml-2">
                 <button
-                    v-if="startDate || endDate"
+                    v-if="(startDate || endDate) && allowAll"
                     type="button"
                     @click="clearRange"
                     class="p-0.5 hover:text-rose-400 transition-colors"
@@ -370,6 +406,7 @@ onUnmounted(() => {
                     Bulan Lalu
                 </button>
                 <button
+                    v-if="allowAll"
                     type="button"
                     @click="applyPreset('all')"
                     class="rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1 text-[11px] text-slate-300 hover:border-emerald-500 hover:text-white transition-colors shrink-0"
@@ -440,10 +477,13 @@ onUnmounted(() => {
                             <button
                                 v-if="item.day"
                                 type="button"
+                                :disabled="isDateDisabled(item.dateStr)"
                                 @click="handleDateClick(item.dateStr)"
                                 class="h-8 w-8 rounded-full flex items-center justify-center transition-all duration-150 relative z-10 text-xs font-medium"
                                 :class="[
-                                    isDayStart(item.dateStr) || isDayEnd(item.dateStr)
+                                    isDateDisabled(item.dateStr)
+                                        ? 'text-slate-600 opacity-25 cursor-not-allowed'
+                                        : isDayStart(item.dateStr) || isDayEnd(item.dateStr)
                                         ? 'bg-emerald-500 text-white font-bold shadow-md shadow-emerald-500/30'
                                         : isDayBetween(item.dateStr)
                                         ? 'text-emerald-200 font-semibold hover:text-white'
@@ -516,10 +556,13 @@ onUnmounted(() => {
                             <button
                                 v-if="item.day"
                                 type="button"
+                                :disabled="isDateDisabled(item.dateStr)"
                                 @click="handleDateClick(item.dateStr)"
                                 class="h-8 w-8 rounded-full flex items-center justify-center transition-all duration-150 relative z-10 text-xs font-medium"
                                 :class="[
-                                    isDayStart(item.dateStr) || isDayEnd(item.dateStr)
+                                    isDateDisabled(item.dateStr)
+                                        ? 'text-slate-600 opacity-25 cursor-not-allowed'
+                                        : isDayStart(item.dateStr) || isDayEnd(item.dateStr)
                                         ? 'bg-emerald-500 text-white font-bold shadow-md shadow-emerald-500/30'
                                         : isDayBetween(item.dateStr)
                                         ? 'text-emerald-200 font-semibold hover:text-white'
@@ -534,26 +577,36 @@ onUnmounted(() => {
             </div>
 
             <!-- Footer: helper instruction and close -->
-            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs">
                 <span class="text-[11px] text-slate-400">
                     <template v-if="!tempStart">
                         Klik tanggal pertama untuk mulai.
                     </template>
                     <template v-else-if="tempStart && !tempEnd">
-                        Pilih tanggal akhir rentang.
+                        {{ sameMonthOnly ? 'Pilih tanggal akhir di bulan yang sama (maks. akhir bulan).' : 'Pilih tanggal akhir rentang.' }}
                     </template>
                     <template v-else>
                         Rentang terpilih: {{ formatDisplayDate(tempStart) }} - {{ formatDisplayDate(tempEnd) }}
                     </template>
                 </span>
 
-                <button
-                    type="button"
-                    @click="isOpen = false"
-                    class="rounded-lg bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
-                >
-                    Tutup
-                </button>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button
+                        v-if="sameMonthOnly && tempStart && !tempEnd"
+                        type="button"
+                        @click="resetTempSelection"
+                        class="rounded-lg border border-slate-700 px-2.5 py-1 text-xs text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                        Ulangi Pilihan
+                    </button>
+                    <button
+                        type="button"
+                        @click="isOpen = false"
+                        class="rounded-lg bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+                    >
+                        Tutup
+                    </button>
+                </div>
             </div>
         </div>
     </div>

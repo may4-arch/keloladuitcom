@@ -22,6 +22,8 @@ class Budget extends Model
         'maximal',
         'minimal',
         'priority',
+        'start_date',
+        'end_date',
     ];
 
     // 4. Casting tipe data
@@ -29,6 +31,8 @@ class Budget extends Model
         'maximal' => 'decimal:2',
         'minimal' => 'decimal:2',
         'priority' => 'integer',
+        'start_date' => 'date:Y-m-d',
+        'end_date' => 'date:Y-m-d',
     ];
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Budget;
 use App\Models\wallet;
 use App\Models\transactions;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -20,6 +21,26 @@ class WalletController extends Controller
         $userId = $request->user()->id;
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
+
+        if (empty($startDate) && empty($endDate)) {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+        } else {
+            $startCarbon = !empty($startDate)
+                ? Carbon::parse($startDate)
+                : Carbon::parse($endDate)->startOfMonth();
+
+            $endCarbon = !empty($endDate)
+                ? Carbon::parse($endDate)
+                : $startCarbon->copy()->endOfMonth();
+
+            if ($startCarbon->format('Y-m') !== $endCarbon->format('Y-m') || $endCarbon->lt($startCarbon)) {
+                $endCarbon = $startCarbon->copy()->endOfMonth();
+            }
+
+            $startDate = $startCarbon->format('Y-m-d');
+            $endDate = $endCarbon->format('Y-m-d');
+        }
 
         // Ensure wallet records are fully synchronized
         wallet::syncForUser($userId);

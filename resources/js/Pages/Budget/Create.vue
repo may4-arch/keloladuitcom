@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SearchableCategorySelect from '@/Components/SearchableCategorySelect.vue';
+import DateRangePicker from '@/Components/DateRangePicker.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -16,6 +17,8 @@ const form = useForm({
     maximal: '',
     minimal: 0,
     priority: 0,
+    start_date: '',
+    end_date: '',
 });
 
 const submit = () => {
@@ -47,7 +50,7 @@ const submit = () => {
             </div>
         </template>
 
-        <div class="p-4 sm:p-6">
+        <div class="p-4 sm:p-6 pb-40">
             <div class="mx-auto max-w-xl rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-sm">
                 <form @submit.prevent="submit" class="space-y-4">
                     <!-- Nama Anggaran -->
@@ -128,6 +131,27 @@ const submit = () => {
                                 {{ form.errors.maximal }}
                             </p>
                         </div>
+                    </div>
+
+                    <!-- Rentang Tanggal (Tanggal Mulai - Tanggal Selesai) -->
+                    <div>
+                        <label for="date-range" class="mb-1 block text-xs font-medium text-slate-300">
+                            Rentang Tanggal
+                        </label>
+                        <DateRangePicker
+                            id="date-range"
+                            v-model:startDate="form.start_date"
+                            v-model:endDate="form.end_date"
+                            input-class="w-full px-3 py-2 text-sm"
+                            placeholder="Pilih rentang tanggal anggaran..."
+                            :error="form.errors.start_date || form.errors.end_date"
+                        />
+                        <p v-if="form.errors.start_date" class="mt-1 text-xs text-rose-400">
+                            {{ form.errors.start_date }}
+                        </p>
+                        <p v-if="form.errors.end_date" class="mt-1 text-xs text-rose-400">
+                            {{ form.errors.end_date }}
+                        </p>
                     </div>
 
                     <!-- Prioritas Checkbox -->

@@ -20,6 +20,30 @@ const formatRupiah = (val) => {
     }).format(val || 0);
 };
 
+// Format date helper (e.g. "15 Nov 2026")
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const cleanDate = String(dateStr).split('T')[0];
+    const parts = cleanDate.split('-');
+    if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        if (!isNaN(d.getTime())) {
+            return d.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+            });
+        }
+    }
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+    });
+};
+
 // Filter state
 const activeFilter = ref('all'); // 'all', 'priority', 'non-priority'
 const searchKeyword = ref('');
@@ -161,6 +185,8 @@ const deleteBudget = () => {
                                 <th class="px-5 py-3">Kategori</th>
                                 <th class="px-5 py-3 text-right">Batas Minimal</th>
                                 <th class="px-5 py-3 text-right text-emerald-400/90">Batas Maksimal</th>
+                                <th class="px-5 py-3 whitespace-nowrap">Tanggal Mulai</th>
+                                <th class="px-5 py-3 whitespace-nowrap">Tanggal Selesai</th>
                                 <th class="px-5 py-3 text-center">Prioritas</th>
                                 <th class="px-5 py-3 text-right">Aksi</th>
                             </tr>
@@ -204,6 +230,16 @@ const deleteBudget = () => {
                                 <!-- Batas Maksimal -->
                                 <td class="px-5 py-3.5 text-right font-mono font-bold text-white whitespace-nowrap">
                                     {{ formatRupiah(budget.maximal) }}
+                                </td>
+
+                                <!-- Tanggal Mulai -->
+                                <td class="px-5 py-3.5 text-slate-300 whitespace-nowrap">
+                                    {{ formatDate(budget.start_date) }}
+                                </td>
+
+                                <!-- Tanggal Selesai -->
+                                <td class="px-5 py-3.5 text-slate-300 whitespace-nowrap">
+                                    {{ formatDate(budget.end_date) }}
                                 </td>
 
                                 <!-- Prioritas (Checklist) -->

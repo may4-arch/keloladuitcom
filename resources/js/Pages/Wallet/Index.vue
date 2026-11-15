@@ -38,10 +38,36 @@ const props = defineProps({
     },
 });
 
+const getCurrentMonthRange = () => {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const lastDayObj = new Date(y, today.getMonth() + 1, 0);
+    return {
+        start: `${y}-${m}-01`,
+        end: `${y}-${m}-${String(lastDayObj.getDate()).padStart(2, '0')}`,
+    };
+};
+
+const defaultMonthRange = getCurrentMonthRange();
+
+const todayStr = (() => {
+    const t = new Date();
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+})();
+
 const filterForm = reactive({
-    start_date: props.filters?.start_date || '',
-    end_date: props.filters?.end_date || '',
+    start_date: props.filters?.start_date || defaultMonthRange.start,
+    end_date: props.filters?.end_date || defaultMonthRange.end,
 });
+
+const isTodayPreset = computed(
+    () => filterForm.start_date === todayStr && filterForm.end_date === todayStr
+);
+
+const isThisMonthPreset = computed(
+    () => filterForm.start_date === defaultMonthRange.start && filterForm.end_date === defaultMonthRange.end
+);
 
 // Format currency helper
 const formatRupiah = (val) => {
@@ -114,9 +140,7 @@ const onRangeChange = (range) => {
 };
 
 const resetFilter = () => {
-    filterForm.start_date = '';
-    filterForm.end_date = '';
-    applyFilter();
+    setPreset('this_month');
 };
 
 // Date Presets
@@ -127,18 +151,15 @@ const setPreset = (preset) => {
     const d = String(today.getDate()).padStart(2, '0');
 
     if (preset === 'today') {
-        const todayStr = `${y}-${m}-${d}`;
-        filterForm.start_date = todayStr;
-        filterForm.end_date = todayStr;
+        const todayDate = `${y}-${m}-${d}`;
+        filterForm.start_date = todayDate;
+        filterForm.end_date = todayDate;
     } else if (preset === 'this_month') {
         const firstDay = `${y}-${m}-01`;
         const lastDayObj = new Date(y, today.getMonth() + 1, 0);
         const lastDay = `${y}-${m}-${String(lastDayObj.getDate()).padStart(2, '0')}`;
         filterForm.start_date = firstDay;
         filterForm.end_date = lastDay;
-    } else if (preset === 'all') {
-        filterForm.start_date = '';
-        filterForm.end_date = '';
     }
     applyFilter();
 };
@@ -356,23 +377,26 @@ const chartSlices = computed(() => {
                             <button
                                 type="button"
                                 @click="setPreset('today')"
-                                class="rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1 text-[11px] text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
+                                :class="
+                                    isTodayPreset
+                                        ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-400 font-medium'
+                                        : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500 hover:text-white'
+                                "
+                                class="rounded-md border px-2.5 py-1 text-[11px] transition-colors"
                             >
                                 Hari Ini
                             </button>
                             <button
                                 type="button"
                                 @click="setPreset('this_month')"
-                                class="rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1 text-[11px] text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
+                                :class="
+                                    isThisMonthPreset
+                                        ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-400 font-medium'
+                                        : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500 hover:text-white'
+                                "
+                                class="rounded-md border px-2.5 py-1 text-[11px] transition-colors"
                             >
                                 Bulan Ini
-                            </button>
-                            <button
-                                type="button"
-                                @click="setPreset('all')"
-                                class="rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1 text-[11px] text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
-                            >
-                                Semua
                             </button>
                         </div>
                     </div>
@@ -384,12 +408,14 @@ const chartSlices = computed(() => {
                             <DateRangePicker
                                 v-model:startDate="filterForm.start_date"
                                 v-model:endDate="filterForm.end_date"
+                                :same-month-only="true"
+                                :allow-all="false"
                                 @change="onRangeChange"
                             />
                         </div>
 
                         <button
-                            v-if="filterForm.start_date || filterForm.end_date"
+                            v-if="!isThisMonthPreset"
                             type="button"
                             @click="resetFilter"
                             class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"

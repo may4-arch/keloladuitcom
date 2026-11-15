@@ -27,6 +27,8 @@ class UpdateBudgetRequest extends FormRequest
             'maximal' => ['required', 'numeric', 'min:0'],
             'minimal' => ['nullable', 'numeric', 'min:0'],
             'priority' => ['nullable', 'boolean'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ];
     }
 
@@ -41,6 +43,18 @@ class UpdateBudgetRequest extends FormRequest
             'maximal' => 'Batas Maksimal',
             'minimal' => 'Batas Minimal',
             'priority' => 'Prioritas',
+            'start_date' => 'Tanggal Mulai',
+            'end_date' => 'Tanggal Selesai',
+        ];
+    }
+
+    /**
+     * Custom validation error messages.
+     */
+    public function messages(): array
+    {
+        return [
+            'end_date.after_or_equal' => 'Tanggal Selesai harus sama dengan atau setelah Tanggal Mulai.',
         ];
     }
 }

@@ -54,6 +54,8 @@ class BudgetController extends Controller
         $validated['user_id'] = $request->user()->id;
         $validated['minimal'] = $validated['minimal'] ?? 0;
         $validated['priority'] = $request->boolean('priority') ? 1 : 0;
+        $validated['start_date'] = $validated['start_date'] ?? null ?: null;
+        $validated['end_date'] = $validated['end_date'] ?? null ?: null;
 
         Budget::create($validated);
 
@@ -100,6 +102,8 @@ class BudgetController extends Controller
         $validated = $request->validated();
         $validated['minimal'] = $validated['minimal'] ?? 0;
         $validated['priority'] = $request->boolean('priority') ? 1 : 0;
+        $validated['start_date'] = $validated['start_date'] ?? null ?: null;
+        $validated['end_date'] = $validated['end_date'] ?? null ?: null;
 
         $budget->update($validated);
 
