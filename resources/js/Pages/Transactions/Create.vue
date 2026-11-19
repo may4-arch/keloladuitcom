@@ -126,6 +126,30 @@ const submit = () => {
                 <form @submit.prevent="submit" class="space-y-5">
                     <!-- Section 1: Header Transaksi -->
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        
+
+                        <!-- Tipe Transaksi -->
+                        <div>
+                            <label for="type" class="mb-1 block text-xs font-medium text-slate-300">
+                                Tipe Transaksi
+                            </label>
+                            <select
+                                id="type"
+                                v-model="form.type"
+                                required
+                                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                :class="{ 'border-rose-500': form.errors.type }"
+                            >
+                                <option value="normal">Normal</option>
+                                <option value="hutang">Hutang</option>
+                                <option value="piutang">Piutang</option>
+                            </select>
+                            <p v-if="form.errors.type" class="mt-1 text-xs text-rose-400">
+                                {{ form.errors.type }}
+                            </p>
+                        </div>
+
+
                         <!-- Kategori -->
                         <div>
                             <label for="category_id" class="mb-1 block text-xs font-medium text-slate-300">
@@ -149,27 +173,6 @@ const submit = () => {
                             </select>
                             <p v-if="form.errors.category_id" class="mt-1 text-xs text-rose-400">
                                 {{ form.errors.category_id }}
-                            </p>
-                        </div>
-
-                        <!-- Tipe Transaksi -->
-                        <div>
-                            <label for="type" class="mb-1 block text-xs font-medium text-slate-300">
-                                Tipe Transaksi
-                            </label>
-                            <select
-                                id="type"
-                                v-model="form.type"
-                                required
-                                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                :class="{ 'border-rose-500': form.errors.type }"
-                            >
-                                <option value="normal">Normal</option>
-                                <option value="hutang">Hutang</option>
-                                <option value="piutang">Piutang</option>
-                            </select>
-                            <p v-if="form.errors.type" class="mt-1 text-xs text-rose-400">
-                                {{ form.errors.type }}
                             </p>
                         </div>
 

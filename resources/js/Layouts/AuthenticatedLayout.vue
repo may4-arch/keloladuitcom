@@ -122,6 +122,22 @@ const getUserInitials = (name) => {
                     <span>Budget</span>
                 </Link>
 
+                <!-- Currencies / Mata Uang -->
+                <Link
+                    :href="route('currencies.index')"
+                    :class="[
+                        route().current('currencies.*')
+                            ? 'bg-slate-800 text-white font-medium'
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50',
+                        'flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs transition-colors'
+                    ]"
+                >
+                    <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Mata Uang</span>
+                </Link>
+
                 <div class="my-2 border-t border-slate-800/80"></div>
 
                 <!-- Profile -->
@@ -220,7 +236,7 @@ const getUserInitials = (name) => {
 
         <!-- Mobile Bottom Navigation Bar (below md:) -->
         <nav class="fixed bottom-0 inset-x-0 z-40 border-t border-slate-800 bg-slate-900/95 backdrop-blur md:hidden shadow-2xl pb-[env(safe-area-inset-bottom)]">
-            <div class="grid grid-cols-5 h-16">
+            <div class="grid grid-cols-6 h-16">
                 <!-- 1. Wallet -->
                 <Link
                     :href="route('wallets.index')"
@@ -286,7 +302,23 @@ const getUserInitials = (name) => {
                     <span class="text-[10px] mt-1 tracking-tight">Budget</span>
                 </Link>
 
-                <!-- 5. Profile -->
+                <!-- 5. Mata Uang -->
+                <Link
+                    :href="route('currencies.index')"
+                    class="flex flex-col items-center justify-center py-1 text-center transition-colors relative"
+                    :class="route().current('currencies.*') ? 'text-emerald-400 font-semibold' : 'text-slate-400 hover:text-slate-200'"
+                >
+                    <span
+                        v-if="route().current('currencies.*')"
+                        class="absolute top-0 w-8 h-0.5 bg-emerald-400 rounded-full"
+                    ></span>
+                    <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-[10px] mt-1 tracking-tight truncate max-w-full px-0.5">Mata Uang</span>
+                </Link>
+
+                <!-- 6. Profile -->
                 <Link
                     :href="route('profile.edit')"
                     class="flex flex-col items-center justify-center py-1 text-center transition-colors relative"

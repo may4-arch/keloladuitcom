@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Currencies;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +19,7 @@ class CategoryController extends Controller
     public function index(Request $request): Response
     {
         $categories = Category::where('user_id', $request->user()->id)
+            ->with('currency')
             ->orderBy('type', 'asc')
             ->orderBy('priority', 'asc')
             ->orderBy('name', 'asc')
@@ -33,7 +35,14 @@ class CategoryController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Category/Create');
+        $currencies = Currencies::where('is_active', true)
+            ->orderByDesc('is_base')
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'symbol', 'is_base']);
+
+        return Inertia::render('Category/Create', [
+            'currencies' => $currencies,
+        ]);
     }
 
     /**
@@ -68,8 +77,15 @@ class CategoryController extends Controller
             abort(403);
         }
 
+        $currencies = Currencies::where('is_active', true)
+            ->orWhere('id', $category->currency_id)
+            ->orderByDesc('is_base')
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'symbol', 'is_base']);
+
         return Inertia::render('Category/Edit', [
             'category' => $category,
+            'currencies' => $currencies,
         ]);
     }
 

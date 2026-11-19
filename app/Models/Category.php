@@ -13,12 +13,15 @@ class Category extends Model
 
     protected $fillable = [
         'user_id',
+        'currency_id',
         'name',
         'priority',
         'type',
     ];
+    
 
     protected $casts = [
+        'currency_id' => 'integer',
         'priority' => 'integer',
         'type' => 'integer',
     ];
@@ -26,6 +29,15 @@ class Category extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    protected $attributes = [
+        'currency_id' => 1,
+    ];
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currencies::class, 'currency_id', 'id');
     }
 
     public function transactions(): HasMany

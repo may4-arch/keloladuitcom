@@ -7,9 +7,14 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    currencies: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const form = useForm({
+    currency_id: props.category.currency_id ?? 1,
     name: props.category.name,
     type: props.category.type,
     priority: props.category.priority ?? 0,
@@ -64,6 +69,32 @@ const submit = () => {
                         />
                         <p v-if="form.errors.name" class="mt-1 text-xs text-rose-400">
                             {{ form.errors.name }}
+                        </p>
+                    </div>
+
+                    <!-- Mata Uang -->
+                    <div>
+                        <label for="currency_id" class="mb-1 block text-xs font-medium text-slate-300">
+                            Mata Uang
+                        </label>
+                        <select
+                            id="currency_id"
+                            v-model="form.currency_id"
+                            required
+                            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                            :class="{ 'border-rose-500': form.errors.currency_id }"
+                        >
+                            <option value="" disabled>Pilih Mata Uang</option>
+                            <option
+                                v-for="curr in currencies"
+                                :key="curr.id"
+                                :value="curr.id"
+                            >
+                                {{ curr.code }} - {{ curr.name }} ({{ curr.symbol }})
+                            </option>
+                        </select>
+                        <p v-if="form.errors.currency_id" class="mt-1 text-xs text-rose-400">
+                            {{ form.errors.currency_id }}
                         </p>
                     </div>
 

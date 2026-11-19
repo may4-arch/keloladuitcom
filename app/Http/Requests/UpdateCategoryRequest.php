@@ -22,6 +22,7 @@ class UpdateCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'currency_id' => ['required', 'integer', 'exists:currencies,id'],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'integer', 'in:1,2'],
             'priority' => ['nullable', 'integer', 'min:0', 'max:255'],
@@ -34,6 +35,7 @@ class UpdateCategoryRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'currency_id' => 'Mata Uang',
             'name' => 'Nama Kategori',
             'type' => 'Tipe Kategori',
             'priority' => 'Prioritas',

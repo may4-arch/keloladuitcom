@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CurrenciesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransactionsController;
@@ -28,6 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('transactions', TransactionsController::class);
     Route::resource('budgets', BudgetController::class);
+    Route::resource('currencies', CurrenciesController::class);
     Route::get('/wallets', [WalletController::class, 'index'])->name('wallets.index');
 });
 

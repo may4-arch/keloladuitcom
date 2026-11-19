@@ -116,6 +116,7 @@ const deleteCategory = () => {
                         <thead class="border-b border-slate-800 bg-slate-950/60 text-slate-400 uppercase text-[11px] font-semibold tracking-wider">
                             <tr>
                                 <th class="px-5 py-3">Nama Kategori</th>
+                                <th class="px-5 py-3">Mata Uang</th>
                                 <th class="px-5 py-3">Tipe</th>
                                 <th class="px-5 py-3 text-center">Prioritas</th>
                                 <th class="px-5 py-3 text-right">Aksi</th>
@@ -129,6 +130,16 @@ const deleteCategory = () => {
                             >
                                 <td class="px-5 py-3.5 font-medium text-slate-200">
                                     {{ category.name }}
+                                </td>
+                                <td class="px-5 py-3.5 whitespace-nowrap">
+                                    <span
+                                        v-if="category.currency"
+                                        class="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700 px-2 py-0.5 text-[11px] font-medium text-slate-200"
+                                    >
+                                        <span class="font-mono font-bold text-white">{{ category.currency.code }}</span>
+                                        <span class="text-slate-400">({{ category.currency.symbol }})</span>
+                                    </span>
+                                    <span v-else class="text-slate-500">-</span>
                                 </td>
                                 <td class="px-5 py-3.5">
                                     <span
